@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMoRE: Small Mixture of Robot Expert Transformer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── NAV ── -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <span class="nav-logo">SMoRE</span>
+      <ul class="nav-links">
+        <li><a href="#abstract">Abstract</a></li>
+        <li><a href="#method">Method</a></li>
+        <li><a href="#results">Results</a></li>
+        <li><a href="#analysis">Analysis</a></li>
+        <li><a href="#limitations">Limitations</a></li>
+        <li><a href="#citation">Citation</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ── HERO ── -->
+  <header id="hero">
+    <div class="hero-inner">
+      <div class="venue-badge">CoRL 2026</div>
+      <h1 class="title">
+        <span class="accent">SMoRE</span>: Small Mixture of Robot Expert
+        Transformer for Bimanual Manipulation
+      </h1>
+
+      <div class="authors">
+        <div class="author-card">
+          <span class="author-name">Narsimha Menga</span>
+          <span class="author-affil">Minnesota Robotics Institute<br />University of Minnesota</span>
+          <a class="author-email" href="mailto:menga026@umn.edu">menga026@umn.edu</a>
+        </div>
+      </div>
+
+      <div class="hero-links">
+        <a class="btn btn-primary" href="assets/SMoRE__CORL2026.pdf" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Paper
+        </a>
+        <a class="btn btn-secondary" href="#" aria-disabled="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+          Code <span class="soon-tag">Soon</span>
+        </a>
+      </div>
+
+      <!-- stat pills -->
+      <div class="stat-pills">
+        <div class="pill">
+          <span class="pill-value">+70%</span>
+          <span class="pill-label">real-world success vs ACT</span>
+        </div>
+        <div class="pill">
+          <span class="pill-value">+4%</span>
+          <span class="pill-label">simulation success vs ACT</span>
+        </div>
+        <div class="pill">
+          <span class="pill-value">77M</span>
+          <span class="pill-label">parameters (8% fewer than ACT)</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── ABSTRACT ── -->
+  <section id="abstract" class="section">
+    <div class="container">
+      <h2 class="section-title">Abstract</h2>
+      <p class="abstract-text">
+        Transformer architectures have become the dominant paradigm in robot manipulation,
+        owing to their ability to model multimodal data across vision, language, and action spaces.
+        However, most small- to mid-scale policies remain single-task models with limited
+        generalization. Mixture-of-Experts (MoE) architectures have demonstrated strong
+        multi-task capabilities in language modeling, yet remain largely unexplored in robot
+        manipulation.
+      </p>
+      <p class="abstract-text">
+        In this work, we investigate how MoE-based transformer architectures transfer to robot
+        manipulation, with a focus on improving multi-task performance. We evaluate on the ALOHA
+        benchmark across both simulated and real-world settings. Our model achieves a
+        <strong>4% improvement</strong> in simulation task success rates and a
+        <strong>70% improvement</strong> in real-world task success rates over the current
+        state-of-the-art baseline, ACT, demonstrating that MoE-based architectures can
+        significantly enhance multi-task generalization in robot manipulation.
+      </p>
+      <div class="keywords">
+        <span>Mixture of Experts</span>
+        <span>Imitation Learning</span>
+        <span>Bimanual Manipulation</span>
+        <span>Multi-Task Learning</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── METHOD ── -->
+  <section id="method" class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">Method</h2>
+      <p class="section-subtitle">
+        SMoRE is an encoder-decoder transformer. The encoder fuses multi-camera visual tokens
+        with proprioceptive state via self-attention; the MoE decoder routes each token through
+        a sparse set of expert feed-forward networks to predict a full action trajectory.
+      </p>
+
+      <div class="arch-figure">
+        <img src="assets/img/task_environments.png" alt="SMoRE Architecture" />
+        <p class="fig-caption">
+          <strong>Figure 1.</strong> SMoRE architecture overview. Images from multiple camera
+          viewpoints pass through a pretrained ResNet-18 backbone. The resulting feature tokens,
+          together with proprioceptive tokens, are refined by a shared transformer encoder.
+          The MoE decoder then receives encoder output via cross-attention and routes each token
+          through a sparse top-<em>K</em> subset of expert FFNs to predict the action trajectory
+          in parallel.
+        </p>
+      </div>
+
+      <div class="method-cards">
+        <div class="method-card">
+          <div class="method-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          </div>
+          <h3>Sparse Expert Routing</h3>
+          <p>
+            Each decoder token activates only a top-<em>K</em> subset of routed experts plus
+            always-on shared experts. This sparse activation keeps inference fast while
+            increasing effective model capacity.
+          </p>
+        </div>
+        <div class="method-card">
+          <div class="method-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Auxiliary-Loss-Free Balancing</h3>
+          <p>
+            Expert load balancing is achieved via learnable bias terms on affinity scores,
+            following DeepSeek-V2. No auxiliary loss is needed, keeping optimization clean.
+          </p>
+        </div>
+        <div class="method-card">
+          <div class="method-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <h3>Multi-Camera Encoder</h3>
+          <p>
+            ResNet-18 feature maps from all camera viewpoints are flattened and concatenated
+            into a joint visual token sequence, enabling rich spatial reasoning across views.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RESULTS ── -->
+  <section id="results" class="section">
+    <div class="container">
+      <h2 class="section-title">Experimental Results</h2>
+
+      <!-- Sim Tasks -->
+      <h3 class="subsection-title">Simulation Tasks (ALOHA / MuJoCo)</h3>
+      <div class="task-grid three-col">
+        <figure class="task-fig">
+          <img src="assets/img/sim/pnp.png" alt="Pick and Place" />
+          <figcaption><strong>Pick &amp; Place</strong><br/>Pick cyan cube → green target area</figcaption>
+        </figure>
+        <figure class="task-fig">
+          <img src="assets/img/sim/trasnfer.png" alt="Transfer" />
+          <figcaption><strong>Transfer</strong><br/>Pass orange cube right → left hand</figcaption>
+        </figure>
+        <figure class="task-fig">
+          <img src="assets/img/sim/insertion.png" alt="Insertion" />
+          <figcaption><strong>Insertion</strong><br/>Insert red peg into blue socket</figcaption>
+        </figure>
+      </div>
+
+      <!-- Sim results tables -->
+      <div class="tables-row">
+        <div class="table-wrap">
+          <p class="table-caption">
+            <strong>Table 1.</strong> Single-policy-per-task simulation results (50 episodes,
+            3 seeds × 50 rollouts). SMoRE matches ACT with 32% fewer parameters.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Params</th>
+                <th>PnP 66%</th>
+                <th>PnP 100%</th>
+                <th>Transfer 75%</th>
+                <th>Transfer 100%</th>
+                <th>Insertion 75%</th>
+                <th>Insertion 100%</th>
+                <th>Avg</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ACT</td>
+                <td>84M</td>
+                <td>96.0 ± 3.2</td>
+                <td>96.0 ± 3.2</td>
+                <td>98.6 ± 1.9</td>
+                <td>98.6 ± 1.9</td>
+                <td>85.3 ± 0.9</td>
+                <td>69.3 ± 3.7</td>
+                <td><strong>87.9</strong></td>
+              </tr>
+              <tr class="highlight-row">
+                <td>SMoRE <span class="ours">(ours)</span></td>
+                <td>57M</td>
+                <td>96.0 ± 2.5</td>
+                <td>96.0 ± 2.5</td>
+                <td>98.3 ± 2.5</td>
+                <td>98.3 ± 2.5</td>
+                <td>76.0 ± 5.6</td>
+                <td>68.6 ± 3.4</td>
+                <td>87.6</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap">
+          <p class="table-caption">
+            <strong>Table 2.</strong> Joint multi-task simulation results. SMoRE outperforms
+            ACT by 4% with 8% fewer parameters — largest gains on the challenging insertion task.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Params</th>
+                <th>PnP 66%</th>
+                <th>PnP 100%</th>
+                <th>Transfer 75%</th>
+                <th>Transfer 100%</th>
+                <th>Insertion 75%</th>
+                <th>Insertion 100%</th>
+                <th>Avg</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ACT</td>
+                <td>84M</td>
+                <td>100.0 ± 0.0</td>
+                <td>100.0 ± 0.0</td>
+                <td>97.3 ± 2.5</td>
+                <td>97.3 ± 2.5</td>
+                <td>84.6 ± 8.9</td>
+                <td>56.6 ± 6.8</td>
+                <td>84.6</td>
+              </tr>
+              <tr class="highlight-row">
+                <td>SMoRE <span class="ours">(ours)</span></td>
+                <td>77M</td>
+                <td>98.0 ± 2.8</td>
+                <td>98.0 ± 2.8</td>
+                <td>98.6 ± 1.9</td>
+                <td>98.6 ± 1.9</td>
+                <td>90.0 ± 7.4</td>
+                <td><strong>69.3 ± 8.3</strong></td>
+                <td><strong>88.6</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Real tasks -->
+      <h3 class="subsection-title" style="margin-top: 3.5rem;">Real-Robot Tasks (Stationary ALOHA)</h3>
+      <div class="task-grid five-col">
+        <figure class="task-fig">
+          <img src="assets/img/real/pick_and_place.png" alt="Pick and Place" />
+          <figcaption><strong>Pick &amp; Place</strong></figcaption>
+        </figure>
+        <figure class="task-fig">
+          <img src="assets/img/real/transfer.png" alt="Transfer" />
+          <figcaption><strong>Transfer</strong></figcaption>
+        </figure>
+        <figure class="task-fig">
+          <img src="assets/img/real/unfold_t_shirt.png" alt="Flip Towel" />
+          <figcaption><strong>Flip Towel</strong></figcaption>
+        </figure>
+        <figure class="task-fig">
+          <img src="assets/img/real/fold_t_shirt_text_blurred.png" alt="Fold T-Shirt" />
+          <figcaption><strong>Fold T-Shirt</strong></figcaption>
+        </figure>
+        <figure class="task-fig">
+          <img src="assets/img/real/clean.png" alt="Clear Table" />
+          <figcaption><strong>Clear Table</strong></figcaption>
+        </figure>
+      </div>
+
+      <div class="real-results-note">
+        Training data deliberately limited: <strong>10 episodes/task</strong> (short-horizon) and
+        <strong>20 episodes/task</strong> (long-horizon) to assess low-data performance.
+      </div>
+
+      <div class="tables-row">
+        <div class="table-wrap">
+          <p class="table-caption">
+            <strong>Table 3.</strong> Real-robot short-horizon tasks (10 rollouts each, jointly
+            trained). SMoRE achieves a 70-point improvement in average success rate.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>ACT</th>
+                <th>SMoRE (ours)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Transfer</td><td>0/10</td><td class="winner">10/10</td></tr>
+              <tr><td>Pick &amp; Place</td><td>8/10</td><td class="winner">9/10</td></tr>
+              <tr><td>Flip Towel</td><td>0/10</td><td class="winner">10/10</td></tr>
+              <tr class="avg-row"><td><strong>Average</strong></td><td>26.6%</td><td class="winner"><strong>96.6%</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-wrap">
+          <p class="table-caption">
+            <strong>Table 4.</strong> Real-robot long-horizon tasks (10 rollouts each, jointly
+            trained). SMoRE outperforms ACT by 70 percentage points on average.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>ACT</th>
+                <th>SMoRE (ours)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Fold T-Shirt</td><td>1/10</td><td class="winner">10/10</td></tr>
+              <tr><td>Clear Table</td><td>1/10</td><td class="winner">6/10</td></tr>
+              <tr class="avg-row"><td><strong>Average</strong></td><td>10.0%</td><td class="winner"><strong>80.0%</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- bar chart visual -->
+      <div class="bar-chart-section">
+        <h3 class="subsection-title">Performance at a Glance</h3>
+        <div class="bar-chart">
+          <div class="bar-group">
+            <div class="bar-label">Sim (multi-task avg)</div>
+            <div class="bars">
+              <div class="bar-row">
+                <span class="bar-model">ACT</span>
+                <div class="bar-track"><div class="bar-fill act" style="width: 84.6%"></div></div>
+                <span class="bar-val">84.6%</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-model">SMoRE</span>
+                <div class="bar-track"><div class="bar-fill smore" style="width: 88.6%"></div></div>
+                <span class="bar-val">88.6%</span>
+              </div>
+            </div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-label">Real (short-horizon avg)</div>
+            <div class="bars">
+              <div class="bar-row">
+                <span class="bar-model">ACT</span>
+                <div class="bar-track"><div class="bar-fill act" style="width: 26.6%"></div></div>
+                <span class="bar-val">26.6%</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-model">SMoRE</span>
+                <div class="bar-track"><div class="bar-fill smore" style="width: 96.6%"></div></div>
+                <span class="bar-val">96.6%</span>
+              </div>
+            </div>
+          </div>
+          <div class="bar-group">
+            <div class="bar-label">Real (long-horizon avg)</div>
+            <div class="bars">
+              <div class="bar-row">
+                <span class="bar-model">ACT</span>
+                <div class="bar-track"><div class="bar-fill act" style="width: 10%"></div></div>
+                <span class="bar-val">10.0%</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-model">SMoRE</span>
+                <div class="bar-track"><div class="bar-fill smore" style="width: 80%"></div></div>
+                <span class="bar-val">80.0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── ANALYSIS ── -->
+  <section id="analysis" class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">Expert Routing Analysis</h2>
+      <p class="section-subtitle">
+        To understand what the MoE experts learn, we visualize encoder representations via
+        t-SNE and expert activation patterns as per-layer heatmaps during open-loop inference.
+      </p>
+
+      <div class="analysis-grid">
+        <figure class="analysis-fig">
+          <img src="assets/img/discussion/frame_165.png" alt="Timestep 165 Pick and Place" />
+          <figcaption><strong>(a)</strong> Timestep 165 — Pick-and-Place (approach &amp; grasp)</figcaption>
+        </figure>
+        <figure class="analysis-fig">
+          <img src="assets/img/discussion/frame_591.png" alt="Timestep 191 Insertion" />
+          <figcaption><strong>(b)</strong> Timestep 191 — Insertion (distinct arm configuration)</figcaption>
+        </figure>
+        <figure class="analysis-fig">
+          <img src="assets/img/discussion/frame_934.png" alt="Timestep 134 Pick and Place" />
+          <figcaption><strong>(c)</strong> Timestep 134 — Pick-and-Place (approach &amp; grasp)</figcaption>
+        </figure>
+        <figure class="analysis-fig">
+          <img src="assets/img/discussion/ccropped.jpg" alt="t-SNE encoder output" />
+          <figcaption><strong>(d)</strong> t-SNE of transformer encoder output — task-discriminative clusters</figcaption>
+        </figure>
+      </div>
+
+      <div class="insight-box">
+        <h3>Key Finding: Experts Specialize for Sub-Actions, Not Tasks</h3>
+        <p>
+          We initially expected expert routing to be <em>task-specific</em>. Instead, routing
+          is driven by the <strong>sub-action being executed</strong>. Timesteps 165 and 134
+          share an approach-and-grasp motion across different tasks and activate nearly
+          identical experts in early layers (experts 11, 12, 13, 15). Timestep 191 (insertion),
+          which requires a qualitatively different arm configuration, recruits a distinct subset
+          (experts 17, 19).
+        </p>
+        <p>
+          This suggests SMoRE implicitly decomposes manipulation into reusable <strong>motor
+          primitives</strong>, and tasks that share primitives mutually reinforce each other's
+          sub-networks during training — explaining why every task achieves higher success under
+          joint training than in isolation.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LIMITATIONS ── -->
+  <section id="limitations" class="section">
+    <div class="container">
+      <h2 class="section-title">Limitations &amp; Future Work</h2>
+
+      <div class="limitation-row">
+        <div class="limitation-figs">
+          <figure class="task-fig">
+            <img src="assets/img/pnp_data_distribution.png" alt="Training data distribution" />
+            <figcaption>Training data distribution</figcaption>
+          </figure>
+          <figure class="task-fig">
+            <img src="assets/img/failure_seed100.png" alt="Failure case" />
+            <figcaption>Out-of-distribution failure</figcaption>
+          </figure>
+        </div>
+        <div class="limitation-text">
+          <p>
+            SMoRE is <strong>deterministic</strong> — it predicts a single fixed action
+            trajectory per observation. In low-data settings, this means the policy struggles
+            with object configurations outside the training distribution. As visualized above,
+            the pick-and-place policy fails for cube positions not seen during training.
+          </p>
+          <p>
+            These limitations can be addressed by replacing the deterministic decoder with a
+            <strong>stochastic decoder</strong> (e.g., diffusion-based or flow-matching), which
+            can model the multimodal distribution of expert demonstrations and better generalize
+            to unseen configurations. Integrating a stochastic decoder with the MoE architecture
+            is a primary direction for future work.
+          </p>
+          <ul class="future-list">
+            <li>Stochastic (diffusion / flow-matching) decoder</li>
+            <li>Scaling experts and jointly trained task count</li>
+            <li>Language-conditioned and open-vocabulary manipulation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CITATION ── -->
+  <section id="citation" class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">Citation</h2>
+      <div class="bibtex-wrap">
+        <button class="copy-btn" id="copyBtn" onclick="copyCitation()">Copy</button>
+        <pre id="bibtex"><code>@inproceedings{menga2026smore,
+  title     = {{SMoRE}: Small Mixture of Robot Expert Transformer
+               for Bimanual Manipulation},
+  author    = {Menga, Narsimha},
+  booktitle = {Conference on Robot Learning (CoRL)},
+  year      = {2026},
+}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="container">
+      <p>
+        Narsimha Menga &mdash; Minnesota Robotics Institute, University of Minnesota &mdash;
+        <a href="mailto:menga026@umn.edu">menga026@umn.edu</a>
+      </p>
+      <p class="footer-note">
+        Website template inspired by academic project pages in the robotics community.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll-spy navbar
+    const sections = document.querySelectorAll('section[id], header[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    const navbar   = document.getElementById('navbar');
+
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 60);
+
+      let current = '';
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 120) current = s.id;
+      });
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    });
+
+    // Copy citation
+    function copyCitation() {
+      const text = document.getElementById('bibtex').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 2000);
+      });
+    }
+
+    // Animate bars on scroll
+    const bars = document.querySelectorAll('.bar-fill');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.width = e.target.style.width; // trigger CSS transition
+          e.target.classList.add('animated');
+        }
+      });
+    }, { threshold: 0.3 });
+    bars.forEach(b => {
+      const targetWidth = b.style.width;
+      b.style.width = '0';
+      b.dataset.target = targetWidth;
+      observer.observe(b);
+    });
+
+    // Re-apply widths via observer
+    const barObserver = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.style.width = e.target.dataset.target;
+        }
+      });
+    }, { threshold: 0.3 });
+    bars.forEach(b => barObserver.observe(b));
+  </script>
+</body>
+</html>
