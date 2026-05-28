@@ -22,6 +22,7 @@
         <li><a href="#abstract">Abstract</a></li>
         <li><a href="#method">Method</a></li>
         <li><a href="#results">Results</a></li>
+        <li><a href="#videos">Videos</a></li>
         <li><a href="#analysis">Analysis</a></li>
         <li><a href="#limitations">Limitations</a></li>
       </ul>
@@ -404,8 +405,55 @@
     </div>
   </section>
 
+  <!-- ── VIDEOS ── -->
+  <section id="videos" class="section section-alt">
+    <div class="container">
+      <h2 class="section-title">Success Rollouts</h2>
+      <p class="section-subtitle">
+        Real-robot demonstrations on the stationary ALOHA platform.
+        All tasks are jointly trained on a single policy.
+      </p>
+
+      <div class="video-tabs">
+        <button class="vtab active" data-tab="short">Short-Horizon Tasks</button>
+        <button class="vtab" data-tab="long">Long-Horizon Tasks</button>
+      </div>
+
+      <div class="video-panel active" id="panel-short">
+        <div class="video-grid three-col">
+          <figure class="video-fig">
+            <video src="assets/videos/pnp.mp4" autoplay muted loop playsinline></video>
+            <figcaption><strong>Pick &amp; Place</strong> — Success Rollout (Ours)<br/>9/10 success rate</figcaption>
+          </figure>
+          <figure class="video-fig">
+            <video src="assets/videos/transfer.mp4" autoplay muted loop playsinline></video>
+            <figcaption><strong>Transfer</strong> — Success Rollout (Ours)<br/>10/10 success rate</figcaption>
+          </figure>
+          <figure class="video-fig">
+            <video src="assets/videos/flip_towel.mp4" autoplay muted loop playsinline></video>
+            <figcaption><strong>Flip Towel</strong> — Success Rollout (Ours)<br/>10/10 success rate</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="video-panel" id="panel-long">
+        <div class="video-grid two-col">
+          <figure class="video-fig">
+            <video src="assets/videos/fold_tshirt.mp4" autoplay muted loop playsinline></video>
+            <figcaption><strong>Fold T-Shirt</strong> — Success Rollout (Ours)<br/>10/10 success rate</figcaption>
+          </figure>
+          <figure class="video-fig">
+            <video src="assets/videos/clear_table.mp4" autoplay muted loop playsinline></video>
+            <figcaption><strong>Clear Table</strong> — Success Rollout (Ours)<br/>6/10 success rate</figcaption>
+          </figure>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
   <!-- ── ANALYSIS ── -->
-  <section id="analysis" class="section section-alt">
+  <section id="analysis" class="section">
     <div class="container">
       <h2 class="section-title">Expert Routing Analysis</h2>
       <p class="section-subtitle">
@@ -533,6 +581,16 @@
       });
       navLinks.forEach(a => {
         a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    });
+
+    // Video tabs
+    document.querySelectorAll('.vtab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.vtab').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.video-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
       });
     });
 
