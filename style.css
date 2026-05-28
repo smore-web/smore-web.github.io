@@ -73,6 +73,9 @@ img { display: block; width: 100%; border-radius: 8px; }
   gap: 1rem;
 }
 .nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   font-weight: 800;
   font-size: 1.15rem;
   background: linear-gradient(135deg, var(--chocolate), var(--amber));
@@ -80,6 +83,12 @@ img { display: block; width: 100%; border-radius: 8px; }
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.01em;
+}
+.nav-logo-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  flex-shrink: 0;
 }
 .nav-links {
   list-style: none;
@@ -124,6 +133,21 @@ img { display: block; width: 100%; border-radius: 8px; }
   margin: auto;
   text-align: center;
   position: relative;
+}
+
+.hero-logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+.hero-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  padding: 6px;
 }
 
 .venue-badge {
